@@ -124,10 +124,15 @@ export async function handleSearch(event) {
     urls.forEach(async (element) => {
       const data = await getWeatherByCity(element);
       const result = {
+        name: data.location.name,
+        country:data.location.country,
         temp: data.current.temp_c,
         condition: data.current.condition.text,
         icon: data.current.condition.icon,
+        url:element,
       };
+      const ulCities = document.getElementById('cities');
+      ulCities.appendChild(createCityElement(result))
       return result;
     });
   }
