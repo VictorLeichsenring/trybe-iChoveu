@@ -1,4 +1,4 @@
-import { getWeatherByCity, searchCities } from './weatherAPI';
+import { getWeatherByCity, searchCities, lastDays } from './weatherAPI';
 
 /**
  * Cria um elemento HTML com as informações passadas
@@ -77,7 +77,7 @@ export function showForecast(forecastList) {
  * Recebe um objeto com as informações de uma cidade e retorna um elemento HTML
  */
 export function createCityElement(cityInfo) {
-  const { name, country, temp, condition, icon /* , url */ } = cityInfo;
+  const { name, country, temp, condition, icon, url } = cityInfo;
 
   const cityElement = createElement('li', 'city');
 
@@ -104,6 +104,13 @@ export function createCityElement(cityInfo) {
   cityElement.appendChild(headingElement);
   cityElement.appendChild(infoContainer);
 
+  const buttonCity = createElement('button', 'buttonCity');
+  buttonCity.textContent = 'Ver previsão';
+  cityElement.appendChild(buttonCity);
+  buttonCity.addEventListener('click', async () => {
+    const days = await lastDays(url);
+    showForecast(days);
+  });
   return cityElement;
 }
 
@@ -119,21 +126,21 @@ export async function handleSearch(event) {
   const cities = await searchCities(searchValue);
   if (cities.length === 0) {
     window.alert('Nenhuma cidade encontrada');
-  } else {
-    const urls = cities.map((element) => element.url);
-    urls.forEach(async (element) => {
-      const data = await getWeatherByCity(element);
-      const result = {
-        name: data.location.name,
-        country: data.location.country,
-        temp: data.current.temp_c,
-        condition: data.current.condition.text,
-        icon: data.current.condition.icon,
-        url: element,
-      };
-      const ulCities = document.getElementById('cities');
-      ulCities.appendChild(createCityElement(result));
-      return result;
-    });
+    return;
   }
+  const urls = cities.map((element) => element.url);
+  const ulCities = document.getElementById('cities');
+  const results = await Promise.all(urls.map(async (element) => {
+    const data = await getWeatherByCity(element);
+    return {
+      name: data.location.name,
+      country: data.location.country,
+      temp: data.current.temp_c,
+      condition: data.current.condition.text,
+      icon: data.current.condition.icon,
+      url: element,
+    };
+  }));
+
+  results.forEach((result) => ulCities.appendChild(createCityElement(result)));
 }

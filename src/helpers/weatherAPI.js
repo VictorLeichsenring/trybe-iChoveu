@@ -13,3 +13,22 @@ export const getWeatherByCity = async (cityURL) => {
   const data = await response.json();
   return data;
 };
+
+export const lastDays = async (cityURL) => {
+  const URL = `http://api.weatherapi.com/v1/forecast.json?lang=pt&key=${TOKEN}&q=${cityURL}&days=7`;
+  const response = await fetch(URL);
+  const data = await response.json();
+  const { forecast } = data;
+  const listDays = [];
+  forecast.forecastday.forEach((element) => {
+    const result = {
+      date: element.date,
+      maxTemp: element.day.maxtemp_c,
+      minTemp: element.day.mintemp_c,
+      condition: element.day.condition.text,
+      icon: element.day.condition.icon,
+    };
+    listDays.push(result);
+  });
+  return listDays;
+};
